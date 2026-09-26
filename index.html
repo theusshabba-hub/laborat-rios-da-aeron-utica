@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laboratório da Aeronáutica</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .hero{
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 24px;
+  }
+  .hero h1{
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 45px;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    margin: 0;
+    color: var(--text);
+  }
+  .hero p{
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    max-width: 46ch;
+    margin: 0;
+  }
+
+  .options{
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .option{
+    position: relative;
+    display: block;
+    background: var(--bg-panel);
+    border: 1px solid var(--line-strong);
+    padding: 28px 22px 24px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .option::before, .option::after{
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--accent-dim);
+    transition: border-color 0.15s ease;
+  }
+  .option::before{ top: -1px; left: -1px; border-right: none; border-bottom: none; }
+  .option::after{ bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
+  .option:hover{
+    border-color: var(--line-strong);
+    background: #141c20;
+  }
+  .option:hover::before, .option:hover::after{
+    border-color: var(--accent);
+  }
+
+  .option .code{
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+  }
+  .option h2{
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 30px;
+    margin: 14px 0 8px;
+    color: var(--text);
+  }
+  .option p{
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-dim);
+    margin: 0;
+  }
+  .option .go{
+    margin-top: 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+  .option:hover .go{ color: var(--accent); }
+
+  footer{
+    margin-top: 64px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 760px){
+    .options{ grid-template-columns: 1fr; }
+    .hero h1{ font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="tag">LABORATÓRIO&nbsp;&middot;&nbsp;PROJETO DE UNIDADES AÉREAS</div>
+
+    <div class="hero">
+      <h1>Laboratório da Aeronáutica</h1>
+      <p>Escolha uma categoria para montar uma unidade do zero: propulsão, estrutura, sobrevivência, armamento e aviônica.</p>
+    </div>
+
+    <div class="hairline" style="margin-top: 40px;"></div>
+
+    <nav class="options">
+      <a class="option" href="aeronaves.html">
+        <div>
+          <div class="code">CLASSE&nbsp;F — ASA FIXA</div>
+          <h2>Aeronaves</h2>
+          <p>Caças, bombardeiros e outras aeronaves de asa fixa. Motor, estrutura, stealth, armamento e sistemas de defesa.</p>
+        </div>
+        <div class="go">ABRIR &rarr;</div>
+      </a>
+
+      <a class="option" href="helicopteros.html">
+        <div>
+          <div class="code">CLASSE&nbsp;H — ASA ROTATIVA</div>
+          <h2>Helicópteros</h2>
+          <p>Unidades de asa rotativa, para ataque, transporte e reconhecimento.</p>
+        </div>
+        <div class="go">ABRIR &rarr;</div>
+      </a>
+
+      <a class="option" href="drones.html">
+        <div>
+          <div class="code">CLASSE&nbsp;D — NÃO TRIPULADO</div>
+          <h2>Drones</h2>
+          <p>Unidades não tripuladas, de reconhecimento a combate.</p>
+        </div>
+        <div class="go">ABRIR &rarr;</div>
+      </a>
+    </nav>
+
+    <footer>v0.1 — em desenvolvimento</footer>
+  </div>
+</body>
+</html>

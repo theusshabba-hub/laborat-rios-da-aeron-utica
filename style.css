@@ -1,0 +1,85 @@
+/* Laboratório da Aeronáutica — design system
+   Estética de prancheta técnica / HUD de cabine: fundo quase-preto,
+   grade de projeto, tipografia condensada para títulos e monoespaçada
+   para dados e rótulos, acento âmbar (referência a mostradores de
+   cockpit analógicos). */
+
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg: #0a0d0f;
+  --bg-panel: #10161a;
+  --line: #24343b;
+  --line-strong: #3c545e;
+  --text: #e7eef0;
+  --text-dim: #8ea3ab;
+  --accent: #f5a623;
+  --accent-dim: #8a6120;
+  --mono: 'IBM Plex Mono', 'Courier New', monospace;
+  --display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+}
+
+body{
+  min-height: 100vh;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: center top;
+  background-attachment: fixed;
+  opacity: 1;
+}
+
+a{ color: inherit; text-decoration: none; }
+
+::selection{ background: var(--accent); color: #10161a; }
+
+.frame{
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+}
+
+.tag{
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.hairline{
+  height: 1px;
+  background: var(--line-strong);
+  width: 100%;
+}
+
+/* Botão / rodapé de navegação simples usado nas páginas internas */
+.back-link{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-dim);
+  border: 1px solid var(--line-strong);
+  padding: 10px 16px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.back-link:hover{
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ transition: none !important; animation: none !important; }
+}
