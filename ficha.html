@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha da Aeronave — Laboratório da Aeronáutica</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .page{ padding-top: 24px; }
+  .page h1{ font-family: var(--display); font-weight: 800; font-size: 40px; margin: 0 0 4px; }
+  .selo{
+    display: inline-block; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+    padding: 6px 14px; border: 1px solid var(--accent-dim); color: var(--accent); margin: 10px 0 30px;
+  }
+  .grid-stats{
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1px; background: var(--line-strong); border: 1px solid var(--line-strong); margin-bottom: 32px;
+  }
+  .stat{ background: var(--bg-panel); padding: 18px 20px; }
+  .stat .k{ font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim); }
+  .stat .v{ font-family: var(--display); font-weight: 800; font-size: 26px; color: var(--text); margin-top: 6px; }
+  .stat .v.accent{ color: var(--accent); }
+
+  .cols{ display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; }
+  .cols h2{
+    font-family: var(--mono); font-size: 13px; letter-spacing: 0.1em; color: var(--text);
+    padding-bottom: 10px; border-bottom: 1px solid var(--line-strong); margin: 0 0 14px;
+  }
+  .id-row{ display: flex; justify-content: space-between; font-family: var(--mono); font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .id-row .k{ color: var(--text-dim); }
+  .equip-list{ list-style: none; margin: 0; padding: 0; }
+  .equip-list li{ font-family: var(--mono); font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .equip-list li:before{ content: "▸ "; color: var(--accent); }
+  .vazio{ font-family: var(--mono); font-size: 13px; color: var(--text-dim); }
+
+  .preco{
+    text-align: center; padding: 32px; border: 1px solid var(--line-strong); background: var(--bg-panel); margin-bottom: 32px;
+  }
+  .preco .k{ font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; color: var(--text-dim); }
+  .preco .v{ font-family: var(--display); font-weight: 800; font-size: 48px; color: var(--accent); margin-top: 8px; }
+
+  .acoes{ display: flex; gap: 14px; }
+
+  @media (max-width: 760px){ .cols{ grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <div class="frame page">
+    <div class="tag">FICHA TÉCNICA</div>
+    <h1 id="nomeAeronave">—</h1>
+    <div class="selo" id="classificacao">—</div>
+
+    <div class="grid-stats">
+      <div class="stat"><div class="k">VELOCIDADE MÁXIMA</div><div class="v accent" id="velMax">—</div></div>
+      <div class="stat"><div class="k">VELOCIDADE DE CRUZEIRO</div><div class="v" id="velCruz">—</div></div>
+      <div class="stat"><div class="k">NÍVEL DE SEGURANÇA</div><div class="v" id="seguranca">—</div></div>
+      <div class="stat"><div class="k">GUERRA ELETRÔNICA</div><div class="v" id="guerraEletronica">—</div></div>
+      <div class="stat"><div class="k">CONFIABILIDADE</div><div class="v" id="confiabilidade">—</div></div>
+      <div class="stat"><div class="k">DESEMPENHO</div><div class="v" id="desempenho">—</div></div>
+      <div class="stat"><div class="k">PESO TOTAL</div><div class="v" id="peso">—</div></div>
+      <div class="stat"><div class="k">COMPLEXIDADE</div><div class="v" id="complexidade">—</div></div>
+    </div>
+
+    <div class="cols">
+      <div>
+        <h2>IDENTIFICAÇÃO</h2>
+        <div class="id-row"><span class="k">Modelo</span><span id="idModelo">—</span></div>
+        <div class="id-row"><span class="k">Doutrina</span><span id="idDoutrina">—</span></div>
+        <div class="id-row"><span class="k">Variante</span><span id="idVariante">—</span></div>
+        <div class="id-row"><span class="k">Função</span><span id="idFuncao">—</span></div>
+      </div>
+      <div>
+        <h2>ARMAMENTO E EQUIPAMENTOS</h2>
+        <ul class="equip-list" id="listaEquip"></ul>
+      </div>
+    </div>
+
+    <div class="preco">
+      <div class="k">PREÇO UNITÁRIO FINAL</div>
+      <div class="v" id="precoFinal">$0</div>
+    </div>
+
+    <div class="hairline" style="margin: 20px 0;"></div>
+    <div class="acoes">
+      <a class="back-link" href="aeronaves.html">&larr; Voltar e editar</a>
+      <a class="back-link" href="index.html">Início</a>
+    </div>
+  </div>
+
+<script>
+function money(n){ return "$" + Math.round(n).toLocaleString("pt-BR"); }
+
+const salvo = localStorage.getItem("fichaAeronave");
+if (!salvo){
+  document.querySelector(".page").innerHTML =
+    '<div class="tag">FICHA TÉCNICA</div><h1>Nenhuma aeronave finalizada ainda</h1>' +
+    '<p style="font-family:var(--mono);color:var(--text-dim);font-size:13px;">Volte ao construtor e clique em "Finalizar Aeronave".</p>' +
+    '<a class="back-link" href="aeronaves.html" style="margin-top:20px;display:inline-block;">&larr; Ir para o construtor</a>';
+} else {
+  const f = JSON.parse(salvo);
+
+  document.getElementById("nomeAeronave").textContent = f.nome;
+  document.getElementById("classificacao").textContent = f.classificacao;
+
+  document.getElementById("velMax").textContent = f.velocidadeMaxima.toLocaleString("pt-BR") + " km/h";
+  document.getElementById("velCruz").textContent = f.velocidadeCruzeiro.toLocaleString("pt-BR") + " km/h";
+  document.getElementById("seguranca").textContent = f.segurancaNivel + " / 100";
+  document.getElementById("guerraEletronica").textContent = f.guerraEletronica + " / 100";
+  document.getElementById("confiabilidade").textContent = f.confiabilidade + "%";
+  document.getElementById("desempenho").textContent = f.desempenho + " / 100";
+  document.getElementById("peso").textContent = f.peso.toLocaleString("pt-BR") + " kg";
+  document.getElementById("complexidade").textContent = f.complexidade;
+
+  document.getElementById("idModelo").textContent = f.modelo;
+  document.getElementById("idDoutrina").textContent = f.doutrina;
+  document.getElementById("idVariante").textContent = f.variante;
+  document.getElementById("idFuncao").textContent = f.funcao;
+
+  const lista = document.getElementById("listaEquip");
+  if (f.equipamentos.length === 0){
+    lista.innerHTML = '<div class="vazio">Nenhum armamento ou equipamento opcional instalado.</div>';
+  } else {
+    f.equipamentos.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      lista.appendChild(li);
+    });
+  }
+
+  document.getElementById("precoFinal").textContent = money(f.custo);
+}
+</script>
+</body>
+</html>
