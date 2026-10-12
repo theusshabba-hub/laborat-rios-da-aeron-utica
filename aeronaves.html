@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aeronaves — Laboratório da Aeronáutica</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .page{ padding-top: 24px; }
+  .page h1{ font-family: var(--display); font-weight: 800; font-size: 34px; margin: 0 0 6px; }
+  .page > p{ font-family: var(--mono); font-size: 13px; color: var(--text-dim); max-width: 60ch; margin: 0 0 8px; }
+  .notice{
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    border: 1px dashed var(--accent-dim); padding: 10px 14px; max-width: 60ch; margin: 18px 0 0;
+  }
+
+  .layout{
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 28px;
+    margin-top: 36px;
+    align-items: start;
+  }
+
+  section.group{ margin-bottom: 40px; }
+  section.group h2{
+    font-family: var(--mono); font-size: 13px; letter-spacing: 0.1em;
+    color: var(--text); margin: 0 0 4px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  section.group .sub{ font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin: 6px 0 16px; }
+
+  .field{
+    display: grid;
+    grid-template-columns: 190px 1fr 96px;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .field label{ font-family: var(--mono); font-size: 13px; color: var(--text); }
+  .field select, .field input[type=number], .field input[type=text]{
+    background: var(--bg-panel);
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 10px;
+    width: 100%;
+  }
+  .field select:focus, .field input:focus{ outline: 1px solid var(--accent); border-color: var(--accent); }
+  .field .readout{ font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-align: right; }
+  .field input[type=range]{ accent-color: var(--accent); background: transparent; border: none; padding: 0; }
+  .warn{
+    font-family: var(--mono); font-size: 11px; color: #ff8a75;
+    padding: 6px 0 14px; display: none;
+  }
+  .calc-val{ font-family: var(--mono); font-size: 13px; color: var(--text-dim); }
+  .finalizar{
+    display: block;
+    width: 100%;
+    background: var(--accent);
+    color: #10161a;
+    border: none;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: 0.03em;
+    padding: 18px;
+    margin-top: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .finalizar:hover{ background: #ffb84d; }
+
+  .totals{
+    position: sticky;
+    top: 24px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line-strong);
+    padding: 20px;
+  }
+  .totals h2{ font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; color: var(--text-dim); margin: 0 0 16px; }
+  .totals .row{ display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .totals .row:last-child{ border-bottom: none; }
+  .totals .row .k{ font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+  .totals .row .v{ font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--accent); }
+
+  footer.nav{ margin-top: 20px; }
+
+  @media (max-width: 860px){
+    .layout{ grid-template-columns: 1fr; }
+    .totals{ position: static; }
+    .field{ grid-template-columns: 1fr; row-gap: 6px; }
+    .field .readout{ text-align: left; }
+  }
+
+  .totals .row .v.small{ font-size: 14px; text-align: right; }
+  .totals .row .v.bad{ color: #ff8a75; }
+  .aviso-carga{
+    display: none; font-family: var(--mono); font-size: 12px; line-height: 1.5; color: #ff8a75;
+    border: 1px dashed #ff8a75; padding: 10px 14px; margin-top: 12px;
+  }
+  .ficha-badge{ display:inline-block; margin-top:10px; padding:5px 14px; border:1px solid rgba(255,255,255,.55); border-radius:20px; font-size:12px; font-weight:700; letter-spacing:.06em }
+  .ficha-badge.exp{ margin-left:6px; border-color:#ffb84d; color:#ffb84d }
+
+  /* ===== FICHA FINAL — adição sem alterar o layout original ===== */
+  .upload-box{margin-top:14px;padding:14px;border:1px dashed var(--line-strong);background:var(--bg-panel)}
+  .upload-box h3{margin:0 0 6px;font-family:var(--mono);font-size:12px;letter-spacing:.08em}
+  .upload-box p{margin:0 0 10px;font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+  .upload-box input{font-family:var(--mono);font-size:12px;max-width:100%}
+  .upload-preview{display:none;max-width:240px;max-height:140px;margin-top:10px;border:1px solid var(--line-strong);object-fit:contain}
+  .ficha-overlay{display:none;position:fixed;inset:0;z-index:9999;overflow:auto;background:rgba(10,14,18,.88);padding:20px}
+  .ficha-overlay.open{display:block}
+  .ficha-actions{max-width:900px;margin:0 auto 10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  .ficha-actions button{border:1px solid var(--line-strong);background:var(--bg-panel);color:var(--text);padding:9px 13px;cursor:pointer;font-family:var(--mono);font-weight:700}
+  .ficha-actions .primary{background:var(--accent);color:#10161a;border-color:var(--accent)}
+  .ficha{max-width:900px;margin:0 auto;background:#fff;color:#273342;font-family:Arial,sans-serif;border-radius:14px;overflow:hidden;box-shadow:0 15px 50px rgba(0,0,0,.4)}
+  .ficha-head{background:#2d3a4d;color:#fff;text-align:center;padding:24px 24px 20px}
+  .ficha-head h2{margin:0;font-size:30px}.ficha-head p{margin:5px 0 0;font-size:14px;opacity:.85}
+  .ficha-image{display:block;width:100%;max-height:430px;object-fit:contain;background:#f4f6f8}
+  .ficha-section{padding:16px 22px;border-bottom:1px solid #e1e5e9}.ficha-section h3{margin:0 0 10px;font-size:13px;letter-spacing:.07em;color:#515c68}
+  .ficha-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px}.ficha-row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid #edf0f2;font-size:13px}.ficha-row b{color:#59636e}.ficha-row span{text-align:right}
+  .ficha-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #e1e5e9}.ficha-stat{text-align:center;padding:14px 6px;border-right:1px solid #e1e5e9}.ficha-stat:last-child{border-right:0}.ficha-stat strong{display:block;font-size:21px;color:#2f6fa8}.ficha-stat small{font-size:9px;color:#59636e;font-weight:700}
+  .ficha-list{margin:0;padding-left:20px;font-size:13px}.ficha-list li{margin:5px 0}.ficha-empty{font-size:13px;color:#7b858e}
+  .ficha-foot{display:grid;grid-template-columns:repeat(3,1fr);background:#2d3a4d;color:#fff;text-align:center}.ficha-foot div{padding:14px 5px}.ficha-foot strong{display:block;font-size:19px}.ficha-foot small{font-size:9px;opacity:.8}
+  @media(max-width:700px){.ficha-overlay{padding:8px}.ficha-grid{grid-template-columns:1fr}.ficha-stats{grid-template-columns:1fr 1fr}.ficha-head h2{font-size:23px}}
+
+</style>
+</head>
+<body>
+  <div class="frame page">
+    <div class="tag">CLASSE&nbsp;F — ASA FIXA</div>
+    <h1>Aeronaves</h1>
+    <p>Monte sua aeronave escolhendo cada sistema. Custo, peso e complexidade somam automaticamente no painel ao lado.</p>
+    <div class="notice">Monte a aeronave, ajuste a confiabilidade e clique em "Finalizar Aeronave" para ver a ficha (com upload de imagem e download em PNG).</div>
+
+    <div class="layout">
+      <div>
+
+        <section class="group" id="grupo-tecnologia">
+          <h2>NÍVEL TECNOLÓGICO</h2>
+          <div class="sub">De 10 a 100 — 70 já é considerado alto. Encarece o avião inteiro e limita a confiabilidade de fábrica: com tecnologia 70 nenhum projeto sai de fábrica acima de 70%, e quanto mais complexo, pior. Subir além disso custa caro na barra de confiabilidade.</div>
+        </section>
+
+        <section class="group" id="grupo-geracao">
+          <h2>GERAÇÃO</h2>
+          <div class="sub">Quanto maior a geração, maior o desempenho, o preço e a complexidade — e menor a confiabilidade de fábrica.</div>
+        </section>
+
+        <section class="group" id="grupo-experimental">
+          <h2>EXPERIMENTAL</h2>
+          <div class="sub">Protótipo fora da curva: dobra o preço de tudo, é bem mais complexo e tem desempenho excepcional. Em compensação a confiabilidade de fábrica despenca — deixar um experimental confiável custa centenas de milhões.</div>
+        </section>
+
+        <section class="group" id="grupo-identificacao">
+          <h2>IDENTIFICAÇÃO</h2>
+          <div class="sub">"Modelo de Avião" já soma um preço-base de referência (aeronaves reais do início dos anos 90).</div>
+        </section>
+
+        <section class="group" id="grupo-propulsao">
+          <h2>PROPULSÃO</h2>
+        </section>
+
+        <section class="group" id="grupo-estrutura">
+          <h2>ESTRUTURA</h2>
+        </section>
+
+        <section class="group" id="grupo-sobrevivencia">
+          <h2>SOBREVIVÊNCIA DA AERONAVE</h2>
+        </section>
+
+        <section class="group" id="grupo-stealth">
+          <h2>STEALTH</h2>
+        </section>
+
+        <section class="group" id="grupo-armamento">
+          <h2>ARMAMENTO GERAL</h2>
+        </section>
+
+        <section class="group" id="grupo-avionica">
+          <h2>AVIÔNICA</h2>
+        </section>
+
+        <section class="group" id="grupo-radares-nav">
+          <h2>RADARES DE NAVEGAÇÃO</h2>
+        </section>
+
+        <section class="group" id="grupo-radares-rastreio">
+          <h2>RADARES DE RASTREIO</h2>
+        </section>
+
+        <section class="group" id="grupo-bombardeiro">
+          <h2>EXCLUSIVO BOMBARDEIROS</h2>
+          <div class="sub">Se sua aeronave não for um bombardeiro, deixe "Armamento Especial" em Nenhum.</div>
+        </section>
+
+        <section class="group" id="grupo-confiabilidade">
+          <h2>CONFIABILIDADE E DESEMPENHO</h2>
+          <div class="sub">A base de fábrica nunca passa do nível tecnológico e cai com a complexidade, a geração e o modo experimental. Arraste pra cima pra investir em confiabilidade — o preço por ponto sobe forte acima de 70% e mais ainda acima de 85%.</div>
+        </section>
+
+        <div class="upload-box">
+          <h3>IMAGEM DA AERONAVE</h3>
+          <p>A imagem será anexada à ficha final.</p>
+          <input id="imagemAeronave" type="file" accept="image/*">
+          <img id="previewAeronave" class="upload-preview" alt="Pré-visualização">
+        </div>
+
+        <div id="avisoCarga" class="aviso-carga"></div>
+        <button id="btnFinalizar" class="finalizar">FINALIZAR AERONAVE &rarr;</button>
+
+      </div>
+
+      <aside class="totals">
+        <h2>TOTAIS</h2>
+        <div class="row"><span class="k">Custo</span><span class="v" id="totalCusto">$0</span></div>
+        <div class="row"><span class="k">Peso (carregado)</span><span class="v small" id="totalPeso">0 kg</span></div>
+        <div class="row"><span class="k">Carga útil</span><span class="v small" id="totalCarga">0 / 0 kg</span></div>
+        <div class="row"><span class="k">Complexidade</span><span class="v" id="totalComplexidade">0</span></div>
+        <div class="row"><span class="k">Confiabilidade</span><span class="v" id="totalConfiabilidade">0%</span></div>
+        <div class="row"><span class="k">Desempenho</span><span class="v" id="totalDesempenho">0</span></div>
+      </aside>
+    </div>
+
+    <div class="hairline" style="margin: 20px 0;"></div>
+    <footer class="nav"><a class="back-link" href="index.html">&larr; Voltar</a></footer>
+  </div>
+
+  <div id="fichaOverlay" class="ficha-overlay">
+    <div class="ficha-actions">
+      <button id="fecharFicha">FECHAR</button>
+      <button id="baixarFicha" class="primary">BAIXAR FICHA PNG</button>
+    </div>
+    <div id="fichaFinal" class="ficha"></div>
+  </div>
+
+<script>
+/* ===================================================================
+   BASE DE DADOS DA AERONAVE
+   Cada campo abaixo tem uma lista de opções com custo, peso (quando
+   se aplica) e complexidade. São valores estimados por mim a partir
+   dos que você já tinha na planilha (ex: Turbofan Baixo Bypass e
+   Alumínio, que ficaram exatamente com os números originais).
+   Quer mudar algum número? É só editar o valor aqui e salvar.
+   =================================================================== */
+const IDENTIFICACAO = {
+  modelo: { label: "Modelo de Avião", options: [
+    // pesoBase = estrutura/sistemas básicos do modelo (kg); cargaMax = carga externa máxima (kg);
+    // hpRef = HP total de referência; velTeto = velocidade máxima realista do modelo (km/h).
+    // Referências reais: F-16 (caça), F-15/F-14 (interceptador), A-10 (CAS), F-111/Su-24 (tático),
+    // B-1B/B-52 (estratégico), E-3 Sentry (AWAC).
+    { nome: "Caça Multifunção", custo: 20000000, complexidade: 3, pesoBase: 5000, cargaMax: 7000, hpRef: 28000, velTeto: 3000 },
+    { nome: "Interceptador", custo: 43000000, complexidade: 4, pesoBase: 7500, cargaMax: 6000, hpRef: 45000, velTeto: 3200 },
+    { nome: "CAS", custo: 13000000, complexidade: 2, pesoBase: 7000, cargaMax: 7300, hpRef: 20000, velTeto: 950 },
+    { nome: "Bombardeiro Tático", custo: 25000000, complexidade: 4, pesoBase: 14000, cargaMax: 11000, hpRef: 56000, velTeto: 2500 },
+    { nome: "Bombardeiro Estratégico", custo: 200000000, complexidade: 7, pesoBase: 60000, cargaMax: 34000, hpRef: 100000, velTeto: 1400 },
+    { nome: "AWAC", custo: 130000000, complexidade: 6, pesoBase: 55000, cargaMax: 500, hpRef: 100000, velTeto: 900 },
+  ]},
+  doutrina: { label: "Doutrina", type: "select", options: ["França","EUA","Rússia","Reino Unido","Alemanha/UE","Itália","China","Suécia"] },
+  variante: { label: "Variante", type: "select", options: ["Nacional","Exportação","Dedicado"] },
+  funcao: { label: "Função", type: "select", options: ["TERRA","NAVAL"] },
+  nome: { label: "Nome da Aeronave", type: "text" },
+  quantidade: { label: "Quantidade de Aeronaves", type: "number", min: 1, max: 100000, valor: 1 },
+};
+
+const PROPULSAO = {
+  motor: { label: "Tipo de Motor", options: [
+    // hpPadrao = HP típico por motor (preenche o campo sozinho); hpMax = limite do que ainda é realista.
+    { nome: "Turbojato", custo: 1200000, peso: 900, complexidade: 3, machBase: 2.0, hpPadrao: 15000, hpMax: 35000 },
+    { nome: "Turbofan", custo: 2000000, peso: 1400, complexidade: 4, machBase: 1.6, hpPadrao: 22000, hpMax: 45000 },
+    { nome: "Turbofan Baixo Bypass", custo: 2500000, peso: 1700, complexidade: 5, machBase: 2.2, hpPadrao: 28000, hpMax: 55000 },
+    { nome: "Turbofan Médio Bypass", custo: 2800000, peso: 1800, complexidade: 5, machBase: 1.8, hpPadrao: 26000, hpMax: 50000 },
+    { nome: "Turbofan Alto Bypass", custo: 3200000, peso: 2100, complexidade: 6, machBase: 0.85, hpPadrao: 40000, hpMax: 90000 },
+    { nome: "Turboprop", custo: 900000, peso: 700, complexidade: 2, machBase: 0.6, hpPadrao: 3500, hpMax: 12000 },
+  ]},
+  quantidadeMotor: { label: "Quantidade de Motores", type: "number", min: 1, max: 4, valor: 1 },
+  sobrealimentacao: { label: "Sobrealimentação", options: [
+    { nome: "NÃO", custo: 0, complexidade: 0 },
+    { nome: "SIM", custo: 180000, complexidade: 1 },
+  ]},
+  posCombustao: { label: "Pós-Combustão", options: [
+    { nome: "NÃO", custo: 0, complexidade: 0 },
+    { nome: "SIM", custo: 250000, complexidade: 2 },
+  ]},
+  refrigeracao: { label: "Refrigeração", options: [
+    { nome: "Ar", custo: 20000, complexidade: 1 },
+    { nome: "Óleo", custo: 40000, complexidade: 1 },
+    { nome: "Somática", custo: 60000, complexidade: 2 },
+    { nome: "Líquida", custo: 70000, complexidade: 2 },
+    { nome: "Sistema de Trocas Térmicas", custo: 100000, complexidade: 3 },
+  ]},
+  decolagem: { label: "Decolagem", options: [
+    { nome: "Tradicional", custo: 0, complexidade: 0 },
+    { nome: "Vertical (VTOL)", custo: 600000, complexidade: 5 },
+  ]},
+};
+
+const ESTRUTURA = {
+  material: { label: "Material", options: [
+    { nome: "Alumínio", custo: 200000, peso: 1700, complexidade: 2, velBonus: 0, fatorCarga: 1.0 },
+    { nome: "Ligas Metálicas", custo: 260000, peso: 1900, complexidade: 3, velBonus: 0.05, fatorCarga: 1.05 },
+    { nome: "Titânio", custo: 450000, peso: 1500, complexidade: 4, velBonus: 0.15, fatorCarga: 1.12 },
+    { nome: "Composite", custo: 600000, peso: 1200, complexidade: 5, velBonus: 0.1, fatorCarga: 1.08 },
+  ]},
+  asas: { label: "Asas", options: [
+    { nome: "Convencional", custo: 250000, complexidade: 1 },
+    { nome: "Geometria Variável", custo: 700000, complexidade: 5 },
+  ]},
+  canards: { label: "Canards", options: [
+    { nome: "NÃO", custo: 0, complexidade: 0 },
+    { nome: "SIM", custo: 150000, complexidade: 2 },
+  ]},
+  estabilizadores: { label: "Estabilizadores Extra", options: [
+    { nome: "NÃO", custo: 0, complexidade: 0 },
+    { nome: "SIM", custo: 120000, complexidade: 1 },
+  ]},
+  hidraulica: { label: "Hidráulica", options: [
+    { nome: "Convencional", custo: 60000, complexidade: 1 },
+    { nome: "Múltiplos Circuitos", custo: 140000, complexidade: 3 },
+  ]},
+  sistemaEletrico: { label: "Sistema Elétrico", options: [
+    { nome: "Geradores", custo: 80000, complexidade: 2 },
+    { nome: "Baterias", custo: 50000, complexidade: 1 },
+  ]},
+  sistemaCombustivel: { label: "Sistema de Combustível", options: [
+    // cargaOcupada = quanto da carga externa os tanques de lançamento consomem (kg)
+    { nome: "Tanques Internos", custo: 100000, complexidade: 1, cargaOcupada: 0 },
+    { nome: "Tanques Externos", custo: 60000, complexidade: 2, cargaOcupada: 1500 },
+    { nome: "Ambos", custo: 140000, complexidade: 3, cargaOcupada: 1500 },
+  ]},
+  reabastecimento: { label: "Reabastecimento em Voo", options: [
+    { nome: "Sonda", custo: 150000, complexidade: 2 },
+    { nome: "Receptáculo", custo: 180000, complexidade: 2 },
+    { nome: "Ambos", custo: 220000, complexidade: 3 },
+  ]},
+};
+
+const SOBREVIVENCIA = {
+  tanquesAutoSelantes: { label: "Tanques Auto-Selantes", options: [
+    { nome: "NÃO", custo: 0, complexidade: 0 },
+    { nome: "SIM", custo: 50000, complexidade: 1 },
+  ]},
+  assentoEjetavel: { label: "Assento Ejetável", options: [
+    { nome: "NÃO", custo: 0, complexidade: 0 },
+    { nome: "SIM", custo: 180000, complexidade: 2 },
+  ]},
+  protecaoIncendio: { label: "Proteção contra Incêndio", options: [
+    { nome: "Manual", custo: 15000, complexidade: 1 },
+    { nome: "Assistida", custo: 35000, complexidade: 2 },
+    { nome: "Câmbio", custo: 45000, complexidade: 2 },
+    { nome: "Automática", custo: 60000, complexidade: 3 },
+  ]},
+  monitoramento: { label: "Monitoramento de Componentes", options: [
+    { nome: "Manual", custo: 20000, complexidade: 1 },
+    { nome: "Alerta Antecipado", custo: 40000, complexidade: 2 },
+    { nome: "Eletrônica", custo: 55000, complexidade: 3 },
+    { nome: "Composta", custo: 65000, complexidade: 3 },
+    { nome: "Automática", custo: 75000, complexidade: 4 },
+  ]},
+};
+
+const STEALTH = {
+  assinatura: { label: "Assinatura", options: [
+    { nome: "Nenhuma", custo: 0, complexidade: 0, velPenal: 0 },
+    { nome: "Redução de RCS", custo: 650000, complexidade: 6, velPenal: 0.1 },
+    { nome: "Material Absorvente", custo: 900000, complexidade: 7, velPenal: 0.05 },
+    { nome: "Redução de Assinatura Infravermelha", custo: 800000, complexidade: 6, velPenal: 0.05 },
+  ]},
+};
+
+const ARMAMENTO = {
+  canhao: { label: "Canhão Automático (unid.)", type: "quantidade", custoUnitario: 300000, pesoUnitario: 100, complexidadeUnitaria: 3, ref: "Canhão de aeronave real: M61 Vulcan ≈ 112 kg, BK-27 ≈ 100 kg, GSh-30-1 ≈ 46 kg" },
+  canhaoMira: { label: "Mira do Canhão", type: "select", options: ["ÓPTICA","HUD","RADAR","ELETRO-ÓPTICA","LASER"] },
+  bombasConv: { label: "Bombas Convencionais (unid.)", type: "quantidade", custoUnitario: 50000, pesoUnitario: 227, complexidadeUnitaria: 1, ref: "Referência: bomba Mk 82 (500 lb) ≈ 227 kg" },
+  bombasCluster: { label: "Bombas Cluster (unid.)", type: "quantidade", custoUnitario: 70000, pesoUnitario: 430, complexidadeUnitaria: 2, ref: "Referência: CBU-87 ≈ 430 kg (Rockeye ≈ 222 kg)" },
+  bombasMira: { label: "Mira das Bombas", type: "select", options: ["ÓPTICA","HUD","COMPUTADOR DE GUIA","INFRAVERMELHO","RADAR","SISTEMA INERCIAL","INERCIAL TERCOM","SATÉLITE"] },
+  foguetes: { label: "Foguetes (unid.)", type: "quantidade", custoUnitario: 15000, pesoUnitario: 10, complexidadeUnitaria: 1, ref: "Referência: foguete Hydra 70 (Mk66) ≈ 10 kg cada" },
+  foguetesMira: { label: "Mira dos Foguetes", type: "select", options: ["ÓPTICA","HUD","COMPUTADOR DE MIRA","LASER","ELETRO-ÓPTICA"] },
+  misseisArAr: { label: "Mísseis Ar-Ar (unid.)", type: "quantidade", custoUnitario: 400000, pesoUnitario: 152, complexidadeUnitaria: 4, miraKey: "misseisArArMira",
+    pesoPorMira: { "Infravermelho (IR)": 87, "Radar Semiativo (SARH)": 231, "Radar Ativo (ARH)": 152, "Rádio EC + SARH": 231, "Inercial + Radar": 152 },
+    ref: "O peso muda com a guiagem: AIM-9L (IR) ≈ 87 kg, AIM-7M (SARH) ≈ 231 kg, AIM-120 (ARH) ≈ 152 kg" },
+  misseisArArMira: { label: "Guiagem Ar-Ar", type: "select", options: ["Infravermelho (IR)","Radar Semiativo (SARH)","Radar Ativo (ARH)","Rádio EC + SARH","Inercial + Radar"] },
+  misselArSup: { label: "Míssil Ar-Superfície (unid.)", type: "quantidade", custoUnitario: 450000, pesoUnitario: 300, complexidadeUnitaria: 4, ref: "Referência: AGM-65 Maverick ≈ 220–300 kg" },
+  misselArSupMira: { label: "Guiagem Ar-Superfície", type: "select", options: ["Rádio","Inercial","Eletro-óptico","Infravermelho","Laser Semiativo","Radar Semiativo","Radar Ativo","TERCOM","Guiagem Combinada"] },
+  misselAntiNavio: { label: "Míssil Anti-Navio (unid.)", type: "quantidade", custoUnitario: 900000, pesoUnitario: 520, complexidadeUnitaria: 5, ref: "Referência: AGM-84 Harpoon ≈ 520 kg" },
+  misselAntiNavioMira: { label: "Guiagem Anti-Navio", type: "select", options: ["Rádio","Inercial","Eletro-óptico","Infravermelho","Laser Semiativo","Radar Semiativo","Radar Ativo","TERCOM","Guiagem Combinada"] },
+  capaceteHMD: { label: "Capacete HMD", options: [
+    { nome: "NÃO", custo: 0, complexidade: 0 },
+    { nome: "SIM", custo: 150000, complexidade: 3 },
+  ]},
+};
+
+const AVIONICA = {
+  chaffs: { label: "Chaffs", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:20000,complexidade:1}] },
+  flares: { label: "Flares", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:20000,complexidade:1}] },
+  jammingRadio: { label: "Jamming de Rádio", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:60000,complexidade:2}] },
+  jammingRadar: { label: "Jamming de Radar", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:80000,complexidade:3}] },
+  decoy: { label: "Decoy (engodo eletrônico)", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:70000,complexidade:2}] },
+  spoofingRadar: { label: "Spoofing de Radar", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:90000,complexidade:3}] },
+  decepcaoRadar: { label: "Decepção de Radar", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:85000,complexidade:3}] },
+  reboqueIsca: { label: "Reboque de Isca Eletrônica", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:50000,complexidade:2}] },
+  laserDisruptivo: { label: "Laser Disruptivo", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:150000,complexidade:4}] },
+  gerenciamentoDefesas: { label: "Gerenciamento de Múltiplas Defesas", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:40000,complexidade:2}] },
+  automacaoIntegrada: { label: "Automação Integrada (requer Gerenciamento)", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:120000,complexidade:4}] },
+};
+
+const RADARES_NAVEGACAO = {
+  navegacao: { label: "Navegação", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:30000,complexidade:1}] },
+  meteorologico: { label: "Meteorológico", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:35000,complexidade:1}] },
+  mapeamentoTerrestre: { label: "Mapeamento Terrestre", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:60000,complexidade:2}] },
+  acompanhamentoTerrestre: { label: "Acompanhamento Terrestre", options: [{nome:"NÃO",custo:0,complexidade:0},{nome:"SIM",custo:65000,complexidade:2}] },
+};
+
+const RADARES_RASTREIO = {
+  tipoRastreio: { label: "Tipo de Radar de Rastreio", options: [
+    { nome: "Nenhum", custo: 0, complexidade: 0 },
+    { nome: "Busca", custo: 50000, complexidade: 2 },
+    { nome: "Rastreamento", custo: 70000, complexidade: 3 },
+    { nome: "Rastreamento Múltiplo", custo: 110000, complexidade: 4 },
+    { nome: "Pulse-Doppler", custo: 160000, complexidade: 5 },
+  ]},
+};
+
+const BOMBARDEIRO = {
+  tipoEspecial: { label: "Armamento Especial", options: [
+    { nome: "Nenhum", custo: 0, complexidade: 0 },
+    // peso por unidade (kg): B61 ≈ 330, GBU-28 ≈ 2.130, BLU-118/B ≈ 900, EMP (estimado) ≈ 500,
+    // AGM-86B ALCM ≈ 1.450, BGM-109B TASM ≈ 1.200
+    { nome: "Capacidade Nuclear", custo: 5000000, complexidade: 8, peso: 330 },
+    { nome: "Bombas Sísmicas", custo: 2500000, complexidade: 6, peso: 2130 },
+    { nome: "Bombas Termobáricas", custo: 1200000, complexidade: 5, peso: 900 },
+    { nome: "EMP", custo: 3000000, complexidade: 7, peso: 500 },
+    { nome: "Mísseis Cruzeiro", custo: 1800000, complexidade: 6, peso: 1450 },
+    { nome: "Míssil Anti-Navio (longo alcance)", custo: 2000000, complexidade: 6, peso: 1200 },
+  ]},
+  quantidadeEspecial: { label: "Quantidade", type: "number", min: 0, max: 20, valor: 0 },
+};
+
+const GERACAO = {
+  geracao: { label: "Geração", options: [
+    { nome: "4.0", custo: 0, complexidade: 0,  custoMult: 1.00, desempenho: 0,  confPenal: 0,  velMult: 1.00, nota: "base" },
+    { nome: "4.5", custo: 0, complexidade: 6,  custoMult: 1.15, desempenho: 6,  confPenal: 5,  velMult: 1.02, nota: "×1,15 preço" },
+    { nome: "5.0", custo: 0, complexidade: 12, custoMult: 1.40, desempenho: 12, confPenal: 10, velMult: 1.04, nota: "×1,40 preço" },
+    { nome: "5.5", custo: 0, complexidade: 20, custoMult: 1.70, desempenho: 18, confPenal: 16, velMult: 1.06, nota: "×1,70 preço" },
+    { nome: "6.0", custo: 0, complexidade: 30, custoMult: 2.10, desempenho: 25, confPenal: 22, velMult: 1.08, nota: "×2,10 preço" },
+  ]},
+};
+
+const EXPERIMENTAL = {
+  experimental: { label: "Projeto Experimental", options: [
+    { nome: "NÃO", custo: 0, complexidade: 0, nota: "—" },
+    { nome: "SIM", custo: 0, complexidade: 0, nota: "×2 preço" },
+  ]},
+};
+
+/* ===================================================================
+   MOTOR DE RENDERIZAÇÃO — não precisa mexer daqui pra baixo.
+   =================================================================== */
+const state = {};
+let nivelTecnologico = 40;
+const readoutsQtd = {};
+const ARMAS_QTD = ["canhao","bombasConv","bombasCluster","foguetes","misseisArAr","misselArSup","misselAntiNavio"];
+
+// peso por unidade de uma arma (kg); alguns mísseis mudam de peso conforme a guiagem escolhida
+function pesoUnit(f){
+  if (f.pesoPorMira && f.miraKey){
+    const m = state[f.miraKey + "_valor"];
+    if (f.pesoPorMira[m] != null) return f.pesoPorMira[m];
+  }
+  return f.pesoUnitario || 0;
+}
+let confiabilidadeManual = null;   // confiabilidade final (calculada em recalc)
+let pontosInvestidos = 0;          // pontos que o usuário comprou acima da base de fábrica
+let confiabilidadeBaseAtual = 10;
+let refsConfiab = {};
+
+function money(n){ return "$" + Math.round(n).toLocaleString("pt-BR"); }
+
+function renderGroup(containerId, config){
+  const container = document.getElementById(containerId);
+  const sub = document.createElement("div");
+  sub.className = "sub";
+  container.appendChild(sub);
+
+  for (const key in config){
+    const f = config[key];
+    const row = document.createElement("div");
+    row.className = "field";
+
+    const label = document.createElement("label");
+    label.textContent = f.label;
+    if (f.ref) label.title = f.ref;
+    row.dataset.key = key;
+    row.appendChild(label);
+
+    let input;
+    if (f.type === "text"){
+      input = document.createElement("input");
+      input.type = "text";
+      input.oninput = () => { state[key + "_texto"] = input.value; recalc(); };
+    } else if (f.type === "number"){
+      input = document.createElement("input");
+      input.type = "number";
+      input.min = f.min; input.max = f.max; input.value = f.valor;
+      state[key + "_qtd"] = f.valor;
+      input.oninput = () => { state[key + "_qtd"] = Number(input.value) || 0; recalc(); };
+    } else if (f.type === "quantidade"){
+      input = document.createElement("input");
+      input.type = "number";
+      input.min = 0; input.value = 0;
+      state[key + "_qtd"] = 0;
+      const readout = document.createElement("span");
+      readout.className = "readout";
+      const update = () => {
+        const qtd = Number(input.value) || 0;
+        state[key + "_qtd"] = qtd;
+        state[key] = { custo: qtd * f.custoUnitario, peso: qtd * pesoUnit(f), complexidade: qtd * f.complexidadeUnitaria };
+        readout.textContent = money(f.custoUnitario) + "/un · " + pesoUnit(f) + " kg";
+      };
+      readoutsQtd[key] = readout;
+      input.oninput = () => { update(); recalc(); };
+      update();
+      row.appendChild(input);
+      row.appendChild(readout);
+      container.appendChild(row);
+      continue;
+    } else if (f.type === "select" && f.options && typeof f.options[0] === "string"){
+      input = document.createElement("select");
+      f.options.forEach(opt => {
+        const o = document.createElement("option");
+        o.value = opt; o.textContent = opt;
+        input.appendChild(o);
+      });
+      state[key + "_valor"] = f.options[0];
+      input.onchange = () => { state[key + "_valor"] = input.value; recalc(); };
+    } else {
+      input = document.createElement("select");
+      f.options.forEach((opt, i) => {
+        const o = document.createElement("option");
+        o.value = i; o.textContent = opt.nome;
+        input.appendChild(o);
+      });
+      state[key] = f.options[0];
+      const readout = document.createElement("span");
+      readout.className = "readout";
+      const updateReadout = () => {
+        const o = f.options[input.value];
+        if (o.nota !== undefined){ readout.textContent = o.nota; return; }
+        let parts = [money(o.custo)];
+        if (o.peso) parts.push(o.peso + "kg");
+        readout.textContent = parts.join(" · ");
+      };
+      input.onchange = () => { state[key] = f.options[input.value]; updateReadout(); recalc(); };
+      updateReadout();
+      row.appendChild(input);
+      row.appendChild(readout);
+      container.appendChild(row);
+      continue;
+    }
+    row.appendChild(input);
+    const readout = document.createElement("span");
+    readout.className = "readout";
+    row.appendChild(readout);
+    container.appendChild(row);
+  }
+}
+
+function renderNivelTecnologico(){
+  const container = document.getElementById("grupo-tecnologia");
+  const row = document.createElement("div");
+  row.className = "field";
+  const label = document.createElement("label");
+  label.textContent = "Nível Tecnológico";
+  const input = document.createElement("input");
+  input.type = "range"; input.min = 10; input.max = 100; input.value = nivelTecnologico;
+  const readout = document.createElement("span");
+  readout.className = "readout";
+  readout.textContent = nivelTecnologico;
+  input.oninput = () => { nivelTecnologico = Number(input.value); readout.textContent = nivelTecnologico; recalc(); };
+  row.appendChild(label); row.appendChild(input); row.appendChild(readout);
+  container.appendChild(row);
+}
+
+function renderMotorHP(){
+  const container = document.getElementById("grupo-propulsao");
+  const motorSelect = container.querySelector("select"); // primeiro select do grupo = tipo de motor
+  const row = document.createElement("div");
+  row.className = "field";
+  const label = document.createElement("label");
+  label.textContent = "HP Unitário do Motor";
+  const input = document.createElement("input");
+  input.type = "number"; input.min = 0; input.step = 100;
+  const readout = document.createElement("span");
+  readout.className = "readout";
+  const warn = document.createElement("div");
+  warn.className = "warn";
+
+  const chave = () => "motorHP:" + (state.motor ? state.motor.nome : "");
+  const atualizar = () => {
+    const m = state.motor;
+    const digitado = Number(input.value) || 0;
+    state.motorHP = digitado > 0 ? digitado : (m ? m.hpPadrao : 0);
+    readout.textContent = m ? "típico " + m.hpPadrao.toLocaleString("pt-BR") : "por motor";
+    if (m && digitado > m.hpMax){
+      warn.textContent = "⚠ " + digitado.toLocaleString("pt-BR") + " HP por motor está muito acima do realista para " + m.nome +
+        " (máximo coerente: " + m.hpMax.toLocaleString("pt-BR") + " HP). Confira o valor — números exagerados distorcem velocidade e carga.";
+      warn.style.display = "block";
+    } else {
+      warn.style.display = "none";
+    }
+  };
+  const carregar = () => {
+    let salvo = "";
+    try { salvo = localStorage.getItem(chave()) || ""; } catch (e) {}
+    input.value = salvo ? salvo : (state.motor ? state.motor.hpPadrao : "");
+    atualizar();
+  };
+  input.oninput = () => {
+    try { localStorage.setItem(chave(), input.value); } catch (e) {}
+    atualizar();
+    recalc();
+  };
+  motorSelect.addEventListener("change", () => { carregar(); recalc(); });
+
+  row.appendChild(label); row.appendChild(input); row.appendChild(readout);
+  const ref = container.querySelector('[data-key="quantidadeMotor"]');
+  if (ref) { ref.after(row, warn); } else { container.appendChild(row); container.appendChild(warn); }
+  carregar();
+}
+
+function linhaCalculada(container, texto){
+  const row = document.createElement("div");
+  row.className = "field";
+  const label = document.createElement("label");
+  label.textContent = texto;
+  const val = document.createElement("div");
+  val.className = "calc-val";
+  row.appendChild(label);
+  row.appendChild(val);
+  row.appendChild(document.createElement("span"));
+  container.appendChild(row);
+  return val;
+}
+
+function renderConfiabilidade(){
+  const container = document.getElementById("grupo-confiabilidade");
+  const valBase = linhaCalculada(container, "Confiabilidade Base (calculada)");
+
+  const rowSlider = document.createElement("div");
+  rowSlider.className = "field";
+  const label = document.createElement("label");
+  label.textContent = "Confiabilidade Final (arraste)";
+  const slider = document.createElement("input");
+  slider.type = "range"; slider.min = 10; slider.max = 100; slider.value = 50;
+  const readoutSlider = document.createElement("span");
+  readoutSlider.className = "readout";
+  slider.oninput = () => { pontosInvestidos = Math.max(0, Number(slider.value) - confiabilidadeBaseAtual); recalc(); };
+  rowSlider.appendChild(label); rowSlider.appendChild(slider); rowSlider.appendChild(readoutSlider);
+  container.appendChild(rowSlider);
+
+  const valCusto = linhaCalculada(container, "Custo do Investimento em Confiabilidade");
+  const valDes = linhaCalculada(container, "Desempenho Estimado");
+
+  refsConfiab = { valBase, slider, readoutSlider, valCusto, valDes };
+}
+
+function custoPontoConfiabilidade(p, experimental){
+  if (experimental){
+    if (p <= 50) return 3000000;
+    if (p <= 70) return 5000000;
+    if (p <= 85) return 9000000;
+    if (p <= 95) return 18000000;
+    return 40000000;
+  }
+  if (p <= 70) return 100000;
+  if (p <= 85) return 220000;
+  if (p <= 95) return 550000;
+  return 1200000;
+}
+
+function recalc(){
+  let custo = 0, pesoEstrutura = 0, pesoArmas = 0, complexidade = 0;
+
+  // motores (multiplicados pela quantidade)
+  const qtdMotor = Math.max(1, state["quantidadeMotor_qtd"] || 1);
+  if (state.motor){
+    custo += (state.motor.custo || 0) * qtdMotor;
+    pesoEstrutura += (state.motor.peso || 0) * qtdMotor;
+    complexidade += (state.motor.complexidade || 0) * qtdMotor;
+  }
+
+  // armamento especial dos bombardeiros (custo, peso e complexidade por unidade)
+  const qtdEsp = state["quantidadeEspecial_qtd"] || 0;
+  if (state.tipoEspecial){
+    custo += (state.tipoEspecial.custo || 0) * qtdEsp;
+    pesoArmas += (state.tipoEspecial.peso || 0) * qtdEsp;
+    complexidade += (state.tipoEspecial.complexidade || 0) * qtdEsp;
+  }
+
+  // armas por unidade: o peso real de alguns mísseis depende da guiagem escolhida
+  ARMAS_QTD.forEach(k => {
+    const f = ARMAMENTO[k];
+    const q = state[k + "_qtd"] || 0;
+    const pu = pesoUnit(f);
+    if (state[k]) state[k].peso = q * pu;
+    pesoArmas += q * pu;
+    if (readoutsQtd[k]) readoutsQtd[k].textContent = money(f.custoUnitario) + "/un · " + pu + " kg";
+  });
+
+  const camposUnicos = ["modelo","sobrealimentacao","posCombustao","refrigeracao","decolagem",
+    "material","asas","canards","estabilizadores","hidraulica","sistemaEletrico",
+    "sistemaCombustivel","reabastecimento","tanquesAutoSelantes","assentoEjetavel",
+    "protecaoIncendio","monitoramento","assinatura",
+    "canhao","bombasConv","bombasCluster","foguetes","misseisArAr","misselArSup","misselAntiNavio","capaceteHMD",
+    "chaffs","flares","jammingRadio","jammingRadar","decoy","spoofingRadar","decepcaoRadar","reboqueIsca",
+    "laserDisruptivo","gerenciamentoDefesas","automacaoIntegrada",
+    "navegacao","meteorologico","mapeamentoTerrestre","acompanhamentoTerrestre","tipoRastreio"];
+
+  camposUnicos.forEach(key => {
+    const o = state[key];
+    if (!o) return;
+    custo += o.custo || 0;
+    complexidade += o.complexidade || 0;
+    if (ARMAS_QTD.indexOf(key) < 0) pesoEstrutura += o.peso || 0; // peso das armas já foi contado acima
+  });
+
+  // ---- geração e experimental ----
+  const ger = state.geracao || { nome: "4.0", custoMult: 1, complexidade: 0, desempenho: 0, confPenal: 0, velMult: 1 };
+  const exp = !!(state.experimental && state.experimental.nome === "SIM");
+  complexidade += ger.complexidade;
+  if (exp) complexidade = (complexidade + 15) * 1.5;
+
+  // ---- pesos ----
+  const modelo = state.modelo || { pesoBase: 0, cargaMax: 0, hpRef: 1 };
+  const pesoVazio = pesoEstrutura + (modelo.pesoBase || 0);
+  const pesoTotal = pesoVazio + pesoArmas;
+  const hpTotal = (state.motorHP || 0) * qtdMotor;
+
+  // ---- capacidade de carga (kg de carga externa) ----
+  // depende do tipo de aeronave, da potência dos motores e do material da estrutura;
+  // tanques externos ocupam parte dessa carga.
+  const fatorPot = Math.max(0.6, Math.min(1.4, Math.sqrt(hpTotal / Math.max(modelo.hpRef || 1, 1))));
+  const fatorMat = state.material ? (state.material.fatorCarga || 1) : 1;
+  const cargaMax = Math.round((modelo.cargaMax || 0) * fatorPot * fatorMat);
+  const cargaTanques = state.sistemaCombustivel ? (state.sistemaCombustivel.cargaOcupada || 0) : 0;
+  const cargaUsada = Math.round(pesoArmas + cargaTanques);
+  const sobrecarga = cargaUsada > cargaMax;
+
+  // ---- preço ----
+  const multiplicadorTec = 1 + (nivelTecnologico / 100) * 0.6;
+  const custoAeronave = custo * multiplicadorTec * ger.custoMult * (exp ? 2 : 1);
+
+  // ---- confiabilidade de fábrica ----
+  // Nunca passa do nível tecnológico (tecnologia 70 → no máximo 70%) e cai com a complexidade,
+  // com a geração e, muito mais, com o modo experimental.
+  const sustentada = 6 + nivelTecnologico * 0.35;
+  const excesso = Math.max(0, complexidade - sustentada);
+  let confiabilidadeBase = nivelTecnologico - complexidade * 0.30
+    - excesso * (0.55 + (100 - nivelTecnologico) / 150) - ger.confPenal;
+  if (exp) confiabilidadeBase = confiabilidadeBase * 0.35 - 5;
+  const piso = exp ? 3 : 10;
+  confiabilidadeBase = Math.round(Math.max(piso, Math.min(nivelTecnologico, confiabilidadeBase)));
+
+  // o que o usuário investiu fica como "pontos acima da base": se a base cai (mais sistemas,
+  // geração maior...), a confiabilidade final cai junto em vez de ser mantida de graça.
+  confiabilidadeBaseAtual = confiabilidadeBase;
+  confiabilidadeManual = Math.min(100, confiabilidadeBase + pontosInvestidos);
+
+  let custoConfiabilidade = 0;
+  for (let p = confiabilidadeBase + 1; p <= confiabilidadeManual; p++){
+    custoConfiabilidade += custoPontoConfiabilidade(p, exp);
+  }
+
+  // ---- desempenho (0–100): relação potência/peso + tecnologia + geração + experimental ----
+  const razaoPotencia = hpTotal / Math.max(pesoTotal, 1); // HP por kg
+  // geração e experimental só rendem de verdade com tecnologia para sustentá-los
+  const fatorTec = 0.3 + 0.7 * (nivelTecnologico / 100);
+  let desempenho = Math.min(60, (razaoPotencia / 3) * 60) + nivelTecnologico * 0.25
+    + (ger.desempenho + (exp ? 25 : 0)) * fatorTec - complexidade * 0.1;
+  desempenho = Math.max(0, Math.min(100, Math.round(desempenho)));
+
+  if (refsConfiab.slider){
+    refsConfiab.slider.min = confiabilidadeBase;
+    refsConfiab.slider.value = confiabilidadeManual;
+    refsConfiab.valBase.textContent = confiabilidadeBase + "%";
+    refsConfiab.readoutSlider.textContent = confiabilidadeManual + "%";
+    refsConfiab.valCusto.textContent = money(custoConfiabilidade);
+    refsConfiab.valDes.textContent = desempenho + " / 100";
+  }
+
+  const custoFinal = custoAeronave + custoConfiabilidade;
+
+  document.getElementById("totalCusto").textContent = money(custoFinal);
+  document.getElementById("totalPeso").textContent = Math.round(pesoTotal).toLocaleString("pt-BR") + " kg";
+  const elCarga = document.getElementById("totalCarga");
+  elCarga.textContent = cargaUsada.toLocaleString("pt-BR") + " / " + cargaMax.toLocaleString("pt-BR") + " kg";
+  elCarga.classList.toggle("bad", sobrecarga);
+  document.getElementById("totalComplexidade").textContent = Math.round(complexidade);
+  document.getElementById("totalConfiabilidade").textContent = confiabilidadeManual + "%";
+  document.getElementById("totalDesempenho").textContent = desempenho;
+
+  const aviso = document.getElementById("avisoCarga");
+  if (sobrecarga){
+    aviso.textContent = "Sobrecarga: armamento e tanques externos somam " + cargaUsada.toLocaleString("pt-BR") +
+      " kg, mas esta aeronave só suporta " + cargaMax.toLocaleString("pt-BR") + " kg (faltam reduzir " +
+      (cargaUsada - cargaMax).toLocaleString("pt-BR") + " kg). Tire armas, ou aumente os motores/HP, ou use um material mais resistente.";
+    aviso.style.display = "block";
+  } else {
+    aviso.style.display = "none";
+  }
+
+  ultimoResultado = {
+    custo: custoFinal, peso: pesoTotal, pesoVazio, pesoArmas, complexidade,
+    confiabilidade: confiabilidadeManual, confiabilidadeBase, desempenho, nivelTecnologico,
+    hpTotal, qtdMotor, cargaMax, cargaUsada, sobrecarga,
+    geracao: ger, experimental: exp, custoConfiabilidade,
+  };
+}
+
+let ultimoResultado = {};
+const TODOS_CAMPOS = Object.assign({}, IDENTIFICACAO, PROPULSAO, ESTRUTURA, SOBREVIVENCIA,
+  STEALTH, ARMAMENTO, AVIONICA, RADARES_NAVEGACAO, RADARES_RASTREIO, BOMBARDEIRO, GERACAO, EXPERIMENTAL);
+
+function complexidadeMaxima(config){
+  let max = 0;
+  Object.values(config).forEach(f => {
+    if (f.options && f.options.length && typeof f.options[0] !== "string"){
+      max += Math.max(...f.options.map(o => o.complexidade || 0));
+    }
+  });
+  return max;
+}
+
+function complexidadeAtual(chaves){
+  return chaves.reduce((s, k) => s + (state[k] ? (state[k].complexidade || 0) : 0), 0);
+}
+
+function coletarEquipamentos(){
+  const itens = [];
+  if (state.motor) itens.push((state["quantidadeMotor_qtd"] || 1) + "× Motor " + state.motor.nome);
+  const camposComQtd = ["canhao","bombasConv","bombasCluster","foguetes","misseisArAr","misselArSup","misselAntiNavio"];
+  const camposSimples = ["sobrealimentacao","posCombustao","tanquesAutoSelantes","assentoEjetavel","assinatura",
+    "capaceteHMD","chaffs","flares","jammingRadio","jammingRadar","decoy","spoofingRadar","decepcaoRadar",
+    "reboqueIsca","laserDisruptivo","gerenciamentoDefesas","automacaoIntegrada",
+    "navegacao","meteorologico","mapeamentoTerrestre","acompanhamentoTerrestre","tipoRastreio"];
+
+  camposComQtd.forEach(k => {
+    const qtd = state[k + "_qtd"] || 0;
+    if (qtd > 0) itens.push(TODOS_CAMPOS[k].label.replace(" (unid.)", "") + " × " + qtd);
+  });
+  camposSimples.forEach(k => {
+    const o = state[k];
+    if (!o || !o.nome) return;
+    if (o.nome === "NÃO" || o.nome === "Nenhum") return;
+    itens.push(o.nome === "SIM" ? TODOS_CAMPOS[k].label : TODOS_CAMPOS[k].label + ": " + o.nome);
+  });
+  if (state.tipoEspecial && state.tipoEspecial.nome !== "Nenhum" && (state["quantidadeEspecial_qtd"] || 0) > 0){
+    itens.push(state.tipoEspecial.nome + " × " + state["quantidadeEspecial_qtd"]);
+  }
+  return itens;
+}
+
+function escapeHTML(v){
+  return String(v ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+}
+
+let imagemAeronaveData = "";
+const inputImagem = document.getElementById("imagemAeronave");
+const previewImagem = document.getElementById("previewAeronave");
+if (inputImagem){
+  inputImagem.addEventListener("change", () => {
+    const file = inputImagem.files && inputImagem.files[0];
+    if (!file) { imagemAeronaveData = ""; previewImagem.style.display = "none"; return; }
+    const reader = new FileReader();
+    reader.onload = e => { imagemAeronaveData = e.target.result; previewImagem.src = imagemAeronaveData; previewImagem.style.display = "block"; };
+    reader.readAsDataURL(file);
+  });
+}
+
+function velocidadeRealista(){
+  const motor = state.motor ? state.motor.nome : "Turbofan";
+  const modelo = state.modelo || { velTeto: 3000 };
+  const hp = ultimoResultado.hpTotal || 0;
+  const peso = Math.max(ultimoResultado.peso, 1); // peso carregado: quanto mais pesada, mais lenta
+  const razao = hp / peso;                        // HP por kg
+  const material = state.material ? state.material.nome : "Alumínio";
+  const asas = state.asas ? state.asas.nome : "Convencional";
+  const turboprop = motor === "Turboprop";
+  const exp = ultimoResultado.experimental;
+
+  // Velocidade máxima possível para cada tipo de propulsão (km/h, nível do mar ≈ 1.225 km/h por Mach).
+  const limites = {
+    "Turboprop": 700,
+    "Turbofan Alto Bypass": 1100,
+    "Turbofan Médio Bypass": 1500,
+    "Turbofan": 1900,
+    "Turbofan Baixo Bypass": 2500,
+    "Turbojato": 2800
+  };
+  const limite = limites[motor] || 1900;
+
+  // Relação potência/peso de referência: abaixo dela a aeronave perde velocidade com raiz quadrada.
+  const ref = turboprop ? 0.35 : 4.0;
+  let fator = hp > 0 ? Math.sqrt(razao / ref) : 0.45;
+  fator = Math.max(0.45, Math.min(1.0, fator));
+
+  let v = limite * fator;
+  v *= 0.82 + (nivelTecnologico / 100) * 0.18;
+  if (material === "Titânio") v *= 1.03;
+  if (material === "Composite") v *= 1.02;
+  if (asas === "Geometria Variável") v *= 1.06;
+  if (!turboprop && state.posCombustao && state.posCombustao.nome === "SIM") v *= 1.14;
+  if (state.assinatura && state.assinatura.nome !== "Nenhuma") v *= (1 - (state.assinatura.velPenal || 0.04));
+  v *= ultimoResultado.geracao ? ultimoResultado.geracao.velMult : 1;
+  if (exp) v *= 1.12;
+
+  // nunca passa do que o motor permite nem do que o tipo de aeronave realmente voa
+  v = Math.min(v, limite * (exp ? 1.12 : 1.0), (modelo.velTeto || 3000) * (exp ? 1.12 : 1.0));
+  v = Math.round(Math.max(180, v));
+  const cruzeiro = Math.round(v * (turboprop ? 0.72 : 0.62));
+  return { maxima: v, cruzeiro, mach: (v / 1225).toFixed(2) };
+}
+
+function valorSelecao(key){
+  if(state[key] && state[key].nome) return state[key].nome;
+  return state[key+"_valor"] || "";
+}
+
+function itensPorCategoria(){
+  const armamentos=[], seguranca=[], avionica=[], guerra=[];
+  const kg = n => Math.round(n).toLocaleString("pt-BR");
+  const addQtd=(arr,k)=>{
+    const q=state[k+"_qtd"]||0;
+    if(q>0){
+      const pu=pesoUnit(TODOS_CAMPOS[k]);
+      arr.push(TODOS_CAMPOS[k].label.replace(" (unid.)","")+" × "+q+" — "+kg(pu)+" kg cada ("+kg(pu*q)+" kg)");
+    }
+  };
+  ARMAS_QTD.forEach(k=>addQtd(armamentos,k));
+  if(state.tipoEspecial && state.tipoEspecial.nome!=="Nenhum" && (state.quantidadeEspecial_qtd||0)>0){
+    const q=state.quantidadeEspecial_qtd, pu=state.tipoEspecial.peso||0;
+    armamentos.push(state.tipoEspecial.nome+" × "+q+" — "+kg(pu)+" kg cada ("+kg(pu*q)+" kg)");
+  }
+  // a mira só aparece se a arma correspondente foi instalada
+  const miras = { canhaoMira:["canhao"], bombasMira:["bombasConv","bombasCluster"], foguetesMira:["foguetes"],
+    misseisArArMira:["misseisArAr"], misselArSupMira:["misselArSup"], misselAntiNavioMira:["misselAntiNavio"] };
+  Object.keys(miras).forEach(k=>{
+    const instalada = miras[k].some(a => (state[a+"_qtd"]||0) > 0);
+    const v=valorSelecao(k);
+    if(instalada && v) armamentos.push(TODOS_CAMPOS[k].label+": "+v);
+  });
+  if(state.sistemaCombustivel && state.sistemaCombustivel.cargaOcupada>0) armamentos.push("Tanques externos de lançamento — ocupam "+kg(state.sistemaCombustivel.cargaOcupada)+" kg de carga");
+  if(valorSelecao("capaceteHMD")==="SIM") seguranca.push(TODOS_CAMPOS.capaceteHMD.label);
+  ["tanquesAutoSelantes","assentoEjetavel","protecaoIncendio","monitoramento"].forEach(k=>{
+    const v=valorSelecao(k); if(v && v!=="NÃO") seguranca.push(TODOS_CAMPOS[k].label+": "+v);
+  });
+  ["navegacao","meteorologico","mapeamentoTerrestre","acompanhamentoTerrestre","tipoRastreio"].forEach(k=>{
+    const v=valorSelecao(k); if(v && v!=="NÃO" && v!=="Nenhum") avionica.push(TODOS_CAMPOS[k].label+": "+v);
+  });
+  ["chaffs","flares","jammingRadio","jammingRadar","decoy","spoofingRadar","decepcaoRadar","reboqueIsca","laserDisruptivo","gerenciamentoDefesas","automacaoIntegrada"].forEach(k=>{
+    const v=valorSelecao(k); if(v && v!=="NÃO") guerra.push(v==="SIM" ? TODOS_CAMPOS[k].label : TODOS_CAMPOS[k].label+": "+v);
+  });
+  return {armamentos,seguranca,avionica,guerra};
+}
+
+function listaHTML(items){ return items.length ? '<ul class="ficha-list">'+items.map(x=>'<li>'+escapeHTML(x)+'</li>').join('')+'</ul>' : '<div class="ficha-empty">Nenhum equipamento instalado.</div>'; }
+
+function finalizarAeronave(){
+  recalc();
+  if (ultimoResultado.sobrecarga){
+    const av = document.getElementById("avisoCarga");
+    av.scrollIntoView({ behavior: "smooth", block: "center" });
+    return; // não finaliza uma aeronave que não consegue decolar com a carga montada
+  }
+  const vel=velocidadeRealista();
+  const cats=itensPorCategoria();
+  const qtd=Number(state.quantidade_qtd)||1;
+  const nome=state.nome_texto || "Aeronave Sem Nome";
+  const R=ultimoResultado;
+  const kg=n=>Math.round(n).toLocaleString("pt-BR");
+
+  const maxSob = complexidadeMaxima(SOBREVIVENCIA) + complexidadeMaxima(STEALTH);
+  const atualSob = complexidadeAtual(["tanquesAutoSelantes","assentoEjetavel","protecaoIncendio","monitoramento","assinatura"]);
+  const seguranca = Math.max(0, Math.min(100, Math.round((atualSob / Math.max(maxSob,1)) * 40 + R.confiabilidade * 0.6)));
+
+  const chavesGuerra = ["chaffs","flares","jammingRadio","jammingRadar","decoy","spoofingRadar","decepcaoRadar","reboqueIsca","laserDisruptivo","gerenciamentoDefesas","automacaoIntegrada"];
+  const guerraEletronica = Math.round((complexidadeAtual(chavesGuerra) / Math.max(complexidadeMaxima(AVIONICA),1)) * 100);
+
+  const score = R.desempenho*0.35 + R.confiabilidade*0.30 + seguranca*0.15 + guerraEletronica*0.20;
+  let classificacao = "Abaixo dos Padrões";
+  if (score >= 70) classificacao = "Aeronave de Ponta";
+  else if (score >= 55) classificacao = "Aeronave Boa";
+  else if (score >= 40) classificacao = "Aeronave Mediana";
+
+  const ficha=document.getElementById("fichaFinal");
+  const imagem=imagemAeronaveData ? '<img class="ficha-image" src="'+imagemAeronaveData+'" alt="Aeronave">' : '';
+  const modeloNome = state.modelo ? state.modelo.nome : "Aeronave";
+  ficha.innerHTML=`
+    <div class="ficha-head"><h2>${escapeHTML(nome)}</h2><p>${escapeHTML(modeloNome)} · Geração ${escapeHTML(R.geracao.nome)} · ${escapeHTML(state.doutrina_valor||"Genérico / Padrão")} · ${escapeHTML(state.variante_valor||"Nacional")}</p>
+      <div><span class="ficha-badge">${escapeHTML(classificacao.toUpperCase())}</span>${R.experimental ? '<span class="ficha-badge exp">EXPERIMENTAL</span>' : ''}</div></div>
+    ${imagem}
+    <div class="ficha-section"><h3>IDENTIFICAÇÃO</h3><div class="ficha-grid">
+      <div class="ficha-row"><b>Modelo</b><span>${escapeHTML(modeloNome)}</span></div>
+      <div class="ficha-row"><b>Quantidade</b><span>${qtd.toLocaleString("pt-BR")}</span></div>
+      <div class="ficha-row"><b>Doutrina</b><span>${escapeHTML(state.doutrina_valor||"—")}</span></div>
+      <div class="ficha-row"><b>Função</b><span>${escapeHTML(state.funcao_valor||"—")}</span></div>
+    </div></div>
+    <div class="ficha-stats">
+      <div class="ficha-stat"><strong>${vel.maxima} km/h</strong><small>VELOCIDADE MÁX.</small></div>
+      <div class="ficha-stat"><strong>${vel.cruzeiro} km/h</strong><small>CRUZEIRO</small></div>
+      <div class="ficha-stat"><strong>${kg(R.peso)} kg</strong><small>PESO CARREGADO</small></div>
+      <div class="ficha-stat"><strong>${R.confiabilidade}%</strong><small>CONFIABILIDADE</small></div>
+    </div>
+    <div class="ficha-section"><h3>DESEMPENHO E PROJETO</h3><div class="ficha-grid">
+      <div class="ficha-row"><b>Mach máximo estimado</b><span>${vel.mach}</span></div>
+      <div class="ficha-row"><b>Taxa de desempenho</b><span>${R.desempenho}/100</span></div>
+      <div class="ficha-row"><b>Nível de segurança</b><span>${seguranca}/100</span></div>
+      <div class="ficha-row"><b>Guerra eletrônica</b><span>${guerraEletronica}/100</span></div>
+      <div class="ficha-row"><b>Nível tecnológico</b><span>${nivelTecnologico}/100</span></div>
+      <div class="ficha-row"><b>Complexidade</b><span>${Math.round(R.complexidade)}</span></div>
+      <div class="ficha-row"><b>Potência total</b><span>${kg(R.hpTotal)} HP (${R.qtdMotor}× motor)</span></div>
+      <div class="ficha-row"><b>Peso vazio</b><span>${kg(R.pesoVazio)} kg</span></div>
+      <div class="ficha-row"><b>Capacidade de carga</b><span>${kg(R.cargaMax)} kg</span></div>
+      <div class="ficha-row"><b>Carga instalada</b><span>${kg(R.cargaUsada)} kg</span></div>
+    </div></div>
+    <div class="ficha-section"><h3>ARMAMENTOS</h3>${listaHTML(cats.armamentos)}</div>
+    <div class="ficha-section"><h3>SEGURANÇA</h3>${listaHTML(cats.seguranca)}</div>
+    <div class="ficha-section"><h3>AVIÔNICA</h3>${listaHTML(cats.avionica)}</div>
+    <div class="ficha-section"><h3>GUERRA ELETRÔNICA</h3>${listaHTML(cats.guerra)}</div>
+    <div class="ficha-foot"><div><strong>${money(R.custo)}</strong><small>CUSTO / UNIDADE</small></div><div><strong>${money(R.custo*qtd)}</strong><small>CUSTO TOTAL</small></div><div><strong>${vel.mach} M</strong><small>MACH MÁX.</small></div></div>`;
+  document.getElementById("fichaOverlay").classList.add("open");
+}
+
+
+document.getElementById("btnFinalizar").addEventListener("click", finalizarAeronave);
+document.getElementById("fecharFicha").addEventListener("click", () => document.getElementById("fichaOverlay").classList.remove("open"));
+document.getElementById("fichaOverlay").addEventListener("click", e => { if(e.target.id === "fichaOverlay") e.currentTarget.classList.remove("open"); });
+document.getElementById("baixarFicha").addEventListener("click", async () => {
+  const btn=document.getElementById("baixarFicha"); btn.disabled=true; btn.textContent="GERANDO...";
+  if(!window.html2canvas){
+    await new Promise((resolve,reject)=>{ const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"; sc.onload=resolve; sc.onerror=reject; document.head.appendChild(sc); });
+  }
+  const canvas=await window.html2canvas(document.getElementById("fichaFinal"),{scale:2,useCORS:true,backgroundColor:"#ffffff"});
+  const a=document.createElement("a"); a.download=((state.nome_texto||"aeronave").replace(/[^a-z0-9_-]+/gi,"_")+"_ficha.png"); a.href=canvas.toDataURL("image/png"); a.click();
+  btn.disabled=false; btn.textContent="BAIXAR FICHA PNG";
+});
+
+
+renderNivelTecnologico();
+renderGroup("grupo-geracao", GERACAO);
+renderGroup("grupo-experimental", EXPERIMENTAL);
+renderGroup("grupo-identificacao", IDENTIFICACAO);
+renderGroup("grupo-propulsao", PROPULSAO);
+renderMotorHP();
+renderGroup("grupo-estrutura", ESTRUTURA);
+renderGroup("grupo-sobrevivencia", SOBREVIVENCIA);
+renderGroup("grupo-stealth", STEALTH);
+renderGroup("grupo-armamento", ARMAMENTO);
+renderGroup("grupo-avionica", AVIONICA);
+renderGroup("grupo-radares-nav", RADARES_NAVEGACAO);
+renderGroup("grupo-radares-rastreio", RADARES_RASTREIO);
+renderGroup("grupo-bombardeiro", BOMBARDEIRO);
+renderConfiabilidade();
+recalc();
+</script>
+</body>
+</html>
